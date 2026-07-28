@@ -1,4 +1,3 @@
-
 # Receipts to Riches — Python Starter Kit
 
 Hackathon Starter Kit | Theme: Receipts to Riches: Your AI Spending Sage
@@ -128,4 +127,3 @@ Backend:
 - `openai` — official OpenAI SDK
 - `sqlalchemy` — ORM for SQLite or PostgreSQL
 - `pypdf` or `pdfplumber` — extract text from PDFs before sending to GPT
-
