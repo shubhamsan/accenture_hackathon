@@ -1,32 +1,75 @@
-/**
- * RECEIPTS PAGE — Placeholder
- *
- * TODO: Fetch uploaded receipts from GET /receipts and display them here.
- * Each receipt card could show: filename, upload date, processing status.
- * Once you've built AI extraction, you can show extracted fields (store, total, date, category).
- */
+import { useEffect, useState } from "react";
+import { getReceipts } from "../services/api";
+
 export default function ReceiptsPage() {
-  return (
-    <div className="max-w-lg mx-auto text-center py-16">
-      <div className="text-6xl mb-4">🗂️</div>
-      <h1 className="text-2xl font-bold text-gray-800 mb-2">Your Receipts</h1>
-      <p className="text-gray-500 mb-6">
-        Your uploaded receipts will appear here once you build this feature out.
+  const [receipts, setReceipts] = useState([]);
+  const [status, setStatus] = useState("loading"); // loading | ready | error
+
+  useEffect(() => {
+    getReceipts()
+      .then((res) => {
+        setReceipts(res.data);
+        setStatus("ready");
+      })
+      .catch(() => setStatus("error"));
+  }, []);
+
+  if (status === "loading") {
+    return <p className="text-center text-gray-500 py-16">Loading receipts...</p>;
+  }
+
+  if (status === "error") {
+    return (
+      <p className="text-center text-red-500 py-16">
+        Failed to load receipts — is the backend running?
       </p>
-      <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-left text-sm text-amber-800">
-        <p className="font-semibold mb-1">💡 TODO for you to build:</p>
-        <ul className="list-disc list-inside space-y-1">
-          <li>
-            Call{" "}
-            <code className="bg-amber-100 px-1 rounded">GET /receipts</code> to
-            fetch uploaded files
-          </li>
-          <li>Display each receipt with filename, date, and status</li>
-          <li>
-            After you add AI extraction — show the parsed data (store, total,
-            category)
-          </li>
-        </ul>
+    );
+  }
+
+  if (receipts.length === 0) {
+    return (
+      <div className="max-w-lg mx-auto text-center py-16">
+        <div className="text-6xl mb-4">🗂️</div>
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Your Receipts</h1>
+        <p className="text-gray-500">Upload a receipt to see it here.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-2xl mx-auto">
+      <h1 className="text-2xl font-bold text-gray-800 mb-6">Your Receipts</h1>
+      <div className="space-y-3">
+        {receipts.map((r) => (
+          <div key={r.filename} className="bg-white border rounded-xl p-4 shadow-sm">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="font-semibold text-gray-800">
+                  {r.store_name || r.filename}
+                </p>
+                <p className="text-sm text-gray-500">
+                  {r.date || new Date(r.uploaded_at * 1000).toLocaleDateString()}
+                  {r.category && ` · ${r.category}`}
+                </p>
+              </div>
+              {r.total_amount != null && (
+                <p className="font-semibold text-emerald-600">
+                  ${Number(r.total_amount).toFixed(2)}
+                </p>
+              )}
+            </div>
+            {r.items?.length > 0 && (
+              <ul className="mt-3 text-sm text-gray-600 space-y-1 border-t pt-3">
+                {r.items.map((item, i) => (
+                  <li key={i} className="flex justify-between">
+                    <span>{item.name}</span>
+                    <span>${Number(item.price).toFixed(2)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );

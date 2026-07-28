@@ -4,6 +4,7 @@ import { uploadReceipt } from "../services/api";
 export default function UploadPage() {
   const [file, setFile] = useState(null);
   const [status, setStatus] = useState(null); // null | 'uploading' | 'success' | 'error'
+  const [errorMessage, setErrorMessage] = useState(null);
   const [dragOver, setDragOver] = useState(false);
   const inputRef = useRef();
 
@@ -11,18 +12,23 @@ export default function UploadPage() {
     if (f && (f.type.startsWith("image/") || f.type === "application/pdf")) {
       setFile(f);
       setStatus(null);
+      setErrorMessage(null);
     }
   };
 
   const handleUpload = async () => {
     if (!file) return;
     setStatus("uploading");
+    setErrorMessage(null);
     try {
       await uploadReceipt(file);
       setStatus("success");
       setFile(null);
-    } catch {
+    } catch (err) {
       setStatus("error");
+      setErrorMessage(
+        err.response?.data?.detail || "Upload failed — is the backend running?"
+      );
     }
   };
 
@@ -89,7 +95,7 @@ export default function UploadPage() {
       )}
       {status === "error" && (
         <p className="mt-3 text-red-500 text-center font-medium">
-          ❌ Upload failed — is the backend running?
+          ❌ {errorMessage}
         </p>
       )}
     </div>
