@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p app/routes app/services app/models app/utils database uploads/receipts uploads/extracted_json && ls -la app database uploads)",
+      "Bash(ls uploads/*.jpg 2>/dev/null && mv uploads/*.jpg uploads/receipts/ && ls uploads uploads/receipts)",
+      "Bash(curl -s -X POST http://127.0.0.1:8123/receipts -F \"receipt=@uploads/receipts/1785233125796-1199-receipt.jpg;type=image/jpeg\")",
+      "Bash(python3 -m json.tool)",
+      "Bash(sqlite3 receipts.db)",
+      "Bash(sqlite3 receipts.db \".tables\")",
+      "Bash(sqlite3 receipts.db \".schema receipts\")",
+      "Bash(kill 2174)"
+    ],
+    "additionalDirectories": [
+      "/Users/naveensigalapalli/Downloads/starter-kit-python-main/backend/app",
+      "/Users/naveensigalapalli/Downloads/starter-kit-python-main/backend/uploads"
+    ]
+  }
+}
