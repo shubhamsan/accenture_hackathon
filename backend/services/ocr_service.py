@@ -5,21 +5,27 @@ import json
 from dotenv import load_dotenv
 from openai import OpenAI
 
+from prompts.receipt_prompt import RECEIPT_EXTRACTION_PROMPT
+
+# Load environment variables
 load_dotenv()
 
+# Initialize OpenAI client
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+
+def encode_image(image_path: str) -> str:
+    """Convert image to Base64 string."""
+    with open(image_path, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode("utf-8")
 
 
 def extract_receipt(image_path: str):
     """
-    Sends a receipt image to OpenAI and returns structured JSON.
+    Extract structured receipt data from an image.
     """
 
-    # Read image
-    with open(image_path, "rb") as image_file:
-        image_bytes = image_file.read()
-
-    image_base64 = base64.b64encode(image_bytes).decode("utf-8")
+    base64_image = encode_image(image_path)
 
     response = client.responses.create(
         model="gpt-4.1",
@@ -29,37 +35,30 @@ def extract_receipt(image_path: str):
                 "content": [
                     {
                         "type": "input_text",
-                        "text": """
-You are an OCR assistant.
-
-Extract the receipt into JSON.
-
-Return ONLY valid JSON.
-
-{
-  "merchant": "",
-  "purchase_date": "",
-  "currency": "",
-  "subtotal": 0,
-  "tax": 0,
-  "total": 0,
-  "items": [
-    {
-      "name": "",
-      "quantity": 1,
-      "price": 0
-    }
-  ]
-}
-"""
+                        "text": RECEIPT_EXTRACTION_PROMPT,
                     },
                     {
                         "type": "input_image",
-                        "image_url": f"data:image/jpeg;base64,{image_base64}"
-                    }
-                ]
+                        "image_url": f"data:image/jpeg;base64,{base64_image}",
+                    },
+                ],
             }
-        ]
+        ],
     )
 
-    return json.loads(response.output_text)
+    output_text = response.output_text.strip()
+
+    # Remove Markdown code fences if present
+    if output_text.startswith("```"):
+        output_text = output_text.replace("```json", "")
+        output_text = output_text.replace("```", "")
+        output_text = output_text.strip()
+
+    try:
+        return json.loads(output_text)
+
+    except json.JSONDecodeError as e:
+        print("❌ Failed to parse JSON")
+        print(e)
+        print(output_text)
+        return None
